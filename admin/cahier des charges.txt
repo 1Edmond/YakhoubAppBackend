@@ -1,0 +1,779 @@
+un cahier des charges complet pour votre application mobile e-commerce multi-					boutiques.
+
+---
+
+CAHIER DES CHARGES
+
+APPLICATION MOBILE E-COMMERCE MULTI-BOUTIQUES
+
+
+1. PRÉSENTATION GÉNÉRALE
+ 1.1 Nom du projet
+MultiShop Tchad (nom provisoire)
+
+1.2 Objectif
+Créer une application mobile unique hébergeant plusieurs boutiques gérées par des propriétaires indépendants, validés par un administrateur. Les clients peuvent commander des produits dans différentes boutiques via une seule application.
+
+1.3 Plateformes
+- Android (prioritaire)
+- iOS (secondaire)
+
+1.4 Technologies proposées
+ Élément | Technologie
+
+Frontend Mobile Flutter (recommandé) ou React Native
+ Backend API  Node.js + Express ou Laravel
+ Base de données  PostgreSQL ou MySQL
+ Authentification  Firebase Auth (Google/Gmail)
+ Paiement mobile  API Airtel Money / Moov Money
+ Stockage images  Firebase Storage ou Cloudinary
+ Notifications Firebase Cloud Messaging (FCM)
+ Géolocalisation  Google Maps API
+
+
+2. ACTEURS DU SYSTÈME
+
+2.1 Administrateur (ADMIN)
+- Gère l'ensemble de l'application
+- Valide ou rejette les inscriptions des propriétaires de magasins
+- Supervise toutes les transactions
+- Gère les litiges et réclamations
+
+2.2 Propriétaire de magasin (Vendeur)
+- S'inscrit et attend la validation par l'ADMIN
+- Crée et gère son magasin (nom, logo, description)
+- Ajoute/modifie/supprime ses produits
+- Gère les commandes reçues
+- Consulte ses statistiques de vente
+
+2.3 Client (Acheteur)
+- S'inscrit avec Gmail, mot de passe et NNI ou passport
+- Parcourt les produits de tous les magasins
+- Ajoute des produits au panier
+- Passe commande avec informations de livraison
+- Suit ses commandes
+- Peut annuler une commande (avec frais)
+
+ 3. EXIGENCES FONCTIONNELLES
+
+3.1 Module Authentification et Inscription
+
+3.1.1 Inscription Client
+| Champ | Type | Obligatoire | Description |
+|-------|------|-------------|-------------|
+| Nom complet | Texte | Oui | Nom et prénom du client |
+| Email Gmail | Email | Oui | Adresse Gmail valide |
+| Mot de passe | Mot de passe | Oui | Minimum 8 caractères |
+| NNI | Texte | Oui | Numéro National d'Identification |
+| Téléphone | Téléphone | Oui | Numéro Airtel ou Moov |
+
+Règles :
+- Vérification email par lien de confirmation
+- NNI unique par utilisateur
+- Validation du format NNI
+
+3.1.2 Inscription Propriétaire de magasin
+| Champ | Type | Obligatoire | Description |
+|-------|------|-------------|-------------|
+| Nom complet | Texte | Oui | Nom du propriétaire |
+| Email Gmail | Email | Oui | Adresse professionnelle |
+| Mot de passe | Mot de passe | Oui | Minimum 8 caractères |
+| NNI | Texte | Oui | Numéro National d'Identification |
+| Téléphone | Téléphone | Oui | Numéro Airtel ou Moov |
+| Nom du magasin | Texte | Oui | Nom commercial |
+| Description | Texte | Oui | Description du magasin |
+| Logo | Image | Oui | Logo du magasin |
+| Catégorie | Liste | Oui | Type de produits vendus |
+
+Règles :
+- Compte inactif tant que non validé par ADMIN
+- Notification par email après validation/rejet
+
+3.1.3 Connexion
+- Connexion par Email + Mot de passe
+- Connexion par Google Sign-In
+- Récupération de mot de passe par email
+- Session persistante (rester connecté)
+
+---
+
+3.2 Module Administration (ADMIN)
+
+3.2.1 Tableau de bord ADMIN
+- Nombre total de magasins
+- Nombre total de clients
+- Nombre total de commandes
+- Chiffre d'affaires global
+- Commandes en attente
+
+3.2.2 Gestion des magasins
+- Liste des demandes d'inscription en attente
+- Validation ou rejet d'un magasin
+- Suspension temporaire d'un magasin
+- Suppression définitive d'un magasin
+- Consultation des détails d'un magasin
+
+3.2.3 Gestion des litiges
+- Consultation des réclamations
+- Médiation entre client et vendeur
+- Remboursement ou annulation forcée
+
+
+
+3.3 Module Propriétaire de Magasin (Vendeur)
+
+3.3.1 Gestion du magasin
+- Modification des informations du magasin
+- Modification du logo
+- Horaires d'ouverture
+- Zone de livraison
+
+3.3.2 Gestion des produits
+| Champ | Type | Obligatoire | Description |
+|-------|------|-------------|-------------|
+| Nom du produit | Texte | Oui | Nom du produit |
+| Description | Texte | Oui | Description détaillée |
+| Prix | Nombre | Oui | Prix en FCFA |
+| Catégorie | Liste | Oui | Catégorie du produit |
+| Marque | Texte | Oui | Marque du produit |
+| Modèle | Texte | Non | Modèle du produit |
+| Couleur | Liste | Oui | Couleurs disponibles |
+| Taille | Liste | Oui | Tailles disponibles (XS, S, M, L, XL, XXL) |
+| Quantité en stock | Nombre | Oui | Stock disponible |
+| Images | Images | Oui | 1 à 5 photos du produit |
+| Réduction | Nombre | Non | Prix promotionnel |
+
+Fonctionnalités :
+- Ajouter un produit
+- Modifier un produit
+- Supprimer un produit
+- Activer/Désactiver un produit (rupture de stock)
+- Rechercher dans ses produits
+
+3.3.3 Gestion des commandes
+- Liste des commandes reçues
+- Filtrer par statut (nouvelle, en préparation, expédiée, livrée, annulée)
+- Détail d'une commande
+- Changer le statut d'une commande
+- Notifier le client du changement de statut
+
+3.3.4 Statistiques
+- Nombre de ventes (jour, semaine, mois)
+- Chiffre d'affaires
+- Produits les plus vendus
+- Commandes en cours
+
+
+
+3.4 Module Client (Acheteur)
+
+3.4.1 Navigation et Recherche
+- Page d'accueil avec produits vedettes
+- Recherche par mot-clé
+- Filtres par :
+  - Catégorie
+  - Magasin
+  - Prix (min - max)
+  - Marque
+  - Couleur
+  - Taille
+- Tri par : prix croissant, prix décroissant, nouveauté, popularité
+
+3.4.7 Système de Réduction de Prix
+
+ Règles de fonctionnement
+1. La réduction s'applique sur le prix total de la commande (pas par produit)
+2. Le client sélectionne un palier parmi ceux autorisés
+3. La demande est envoyée au vendeur pour approbation
+4. Le vendeur peut :
+   - ✅ **Accepter** la réduction demandée
+   - ❌ **Refuser** la réduction
+   - 🔄 **Proposer un autre montant** parmi les paliers disponibles
+5. Si le vendeur accepte, le nouveau prix est appliqué
+6. Si le vendeur refuse, le prix initial reste inchangé
+7. La négociation est limitée à 2 allers-retours maximum
+Règle
+Le client peut demander une réduction sur le prix d'un produit selon des paliers prédéfinis.
+Paliers de réduction autorisés
+| Palier | Montant de réduction |
+|--------|----------------------|
+| 1 | 250 FCFA |
+| 2 | 500 FCFA |
+| 3 | 1 000 FCFA |
+| 4 | 1 500 FCFA |
+| 5 | 2 000 FCFA |
+| 6 | 2 500 FCFA |
+| 7 | 3 000 FCFA |
+| 8 | 3 500 FCFA |
+| 9 | 4 000 FCFA |
+| 10 | 5 000 FCFA |
+| 11 | 10 000 FCFA |
+
+3.4.2 Fiche Produit
+- Images du produit (galerie)
+- Nom, description, prix
+- Marque, modèle
+- Couleurs disponibles (sélection visuelle)
+- Tailles disponibles (sélection)
+- Nom du magasin vendeur
+- Bouton "Ajouter au panier"
+- Bouton "Acheter maintenant"
+
+3.4.3 Panier
+- Liste des produits ajoutés
+- Regroupement par magasin
+- Modification de la quantité
+- Suppression d'un produit
+- Calcul du sous-total par magasin
+- Calcul du total général
+- Bouton "Commander"
+
+3.4.4 Processus de Commande
+
+Étape 1 : Récapitulatif
+- Liste des produits commandés
+- Quantité, prix unitaire, total
+
+Étape 2 : Adresse de livraison
+| Champ | Type | Obligatoire | Description |
+|-------|------|-------------|-------------|
+| Quartier | Texte | Oui | Nom du quartier |
+| Rue | Texte | Oui | Nom de la rue |
+| Description | Texte | Non | Indications supplémentaires |
+| Photo de la porte | Image | Oui | Photo géolocalisée |
+
+Étape 3 : Mode de paiement
+- Airtel Money
+- Moov Money
+
+Étape 4 : Confirmation
+- Résumé complet de la commande
+- Bouton "Confirmer et Payer"
+
+3.4.5 Suivi de Commande
+- Liste de toutes les commandes
+- Statut en temps réel :
+  - 🟡 En attente de confirmation
+  - 🟠 Confirmée par le vendeur
+  - 🔵 En préparation
+  - 🟣 Expédiée
+  - 🟢 Livrée
+  - 🔴 Annulée
+- Détail de chaque commande
+- Position du livreur sur la carte (si disponible)
+
+3.4.6 Annulation de Commande
+Conditions :
+- Possible uniquement avant expédition
+- Frais d'annulation = frais de transport de livraison
+
+Processus :
+1. Le client demande l'annulation
+2. Calcul des frais de transport
+3. Confirmation des frais par le client
+4. Paiement des frais via Airtel Money ou Moov Money
+5. Remboursement du montant de la commande (hors frais)
+6. Statut de la commande : Annulée
+
+
+3.5 Module Paiement
+
+3.5.1 Airtel Money
+- Redirection vers l'API Airtel Money
+- Saisie du code PIN
+- Confirmation du paiement
+- Retour à l'application avec statut
+
+3.5.2 Moov Money
+- Redirection vers l'API Moov Money
+- Saisie du code PIN
+- Confirmation du paiement
+- Retour à l'application avec statut
+
+3.5.3 Sécurité des paiements
+- Chiffrement SSL/TLS
+- Tokenisation des transactions
+- Journal de toutes les transactions
+- Détection de fraude
+- Remboursement sécurisé
+
+
+3.6 Module Livraison
+
+3.6.1 Livraison gratuite
+- La livraison est gratuite pour toutes les commandes
+
+3.6.2 Suivi de livraison
+- Notification au client à chaque changement de statut
+- Estimation du délai de livraison
+- Confirmation de réception par le client
+
+3.6.3 Photo de porte
+- Prise de photo obligatoire lors de la commande
+- Géolocalisation automatique de la photo
+- Stockage sécurisé de la photo
+
+
+3.7 Module Notifications
+
+| Type | Destinataire | Déclencheur |
+|------|-------------|-------------|
+| Validation magasin | Propriétaire | ADMIN valide le magasin |
+| Nouvelle commande | Propriétaire | Client passe commande |
+| Changement statut | Client | Statut commande modifié |
+| Annulation | Propriétaire | Client annule commande |
+| Promotion | Client | Nouvelle offre disponible |
+| Rappel panier | Client | Panier abandonné 24h |
+
+
+
+4. EXIGENCES NON FONCTIONNELLES
+
+4.1 Performance
+- Temps de chargement < 3 secondes
+- Support de 1000 utilisateurs simultanés
+- Optimisation des images
+
+4.2 Sécurité
+- Authentification par token JWT
+- Chiffrement des données sensibles
+- Validation des entrées utilisateur
+- Protection contre les injections SQL
+- HTTPS obligatoire
+
+4.3 Disponibilité
+- Disponibilité 99,5% (hors maintenance)
+- Maintenance programmée la nuit (00h-04h)
+- Sauvegarde quotidienne de la base de données
+
+4.4 Compatibilité
+- Android 8.0 et versions supérieures
+- iOS 14 et versions supérieures
+- Mode hors ligne (consultation du catalogue)
+
+4.5 Ergonomie (UX/UI)
+- Interface en français
+- Design responsive
+- Navigation intuitive
+- Mode sombre
+- Accessibilité (contraste, taille de police)
+
+
+5. MAQUETTES DES ÉCRANS PRINCIPAUX
+
+5.1 Liste des écrans
+
+| N° | Écran | Acteur |
+|----|-------|--------|
+| 1 | Splash screen | Tous |
+| 2 | Connexion | Tous |
+| 3 | Inscription Client | Client |
+| 4 | Inscription Vendeur | Vendeur |
+| 5 | Accueil Client | Client |
+| 6 | Recherche et Filtres | Client |
+| 7 | Fiche Produit | Client |
+| 8 | Panier | Client |
+| 9 | Commande - Adresse | Client |
+| 10 | Commande - Photo de porte | Client |
+| 11 | Commande - Paiement | Client |
+| 12 | Confirmation commande | Client |
+| 13 | Mes commandes | Client |
+| 14 | Suivi commande | Client |
+| 15 | Profil Client | Client |
+| 16 | Tableau de bord ADMIN | ADMIN |
+| 17 | Validation magasins | ADMIN |
+| 18 | Tableau de bord Vendeur | Vendeur |
+| 19 | Gestion produits | Vendeur |
+| 20 | Ajout/Modification produit | Vendeur |
+| 21 | Commandes reçues | Vendeur |
+| 22 | Statistiques | Vendeur |
+| 23 | Profil Vendeur | Vendeur |
+
+
+ 6. DIAGRAMME D'ARCHITECTURE
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         APPLICATION MOBILE                               │
+│                        (Flutter / React Native)                          │
+└────────────────────────────────┬────────────────────────────────────────┘
+                                 │
+                                 │ HTTPS (REST API)
+                                 │
+┌────────────────────────────────▼────────────────────────────────────────┐
+│                           BACKEND API                                    │
+│                      (Node.js + Express)                                 │
+│                                                                          │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐     │
+│  │  Auth    │ │ Magasin  │ │ Produit  │ │ Commande │ │ Paiement │     │
+│  │ Service  │ │ Service  │ │ Service  │ │ Service  │ │ Service  │     │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────┘     │
+└──────────┬──────────┬──────────┬──────────┬──────────┬─────────────────┘
+           │          │          │          │          │
+           ▼          ▼          ▼          ▼          ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        SERVICES EXTERNES                                 │
+│                                                                          │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐     │
+│  │Firebase  │ │Airtel    │ │Moov      │ │Google    │ │Stockage  │     │
+│  │Auth + FCM│ │Money API │ │Money API │ │Maps API  │ │Images    │     │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────┘     │
+└─────────────────────────────────────────────────────────────────────────┘
+                                 │
+                                 ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        BASE DE DONNÉES                                   │
+│                     (PostgreSQL / MySQL)                                 │
+│                                                                          │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐     │
+│  │Users     │ │Stores    │ │Products  │ │Orders    │ │Payments  │     │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────┘     │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 7. MODÈLE DE BASE DE DONNÉES
+
+### 7.1 Table Users (Utilisateurs)
+| Colonne | Type | Description |
+|---------|------|-------------|
+| id | UUID | Identifiant unique |
+| full_name | VARCHAR(100) | Nom complet |
+| email | VARCHAR(150) | Email Gmail |
+| password_hash | VARCHAR(255) | Mot de passe hashé |
+| nni | VARCHAR(20) | Numéro National Identification |
+| phone | VARCHAR(15) | Numéro de téléphone |
+| role | ENUM('admin','vendor','customer') | Rôle utilisateur |
+| is_active | BOOLEAN | Compte actif |
+| is_verified | BOOLEAN | Email vérifié |
+| created_at | TIMESTAMP | Date création |
+| updated_at | TIMESTAMP | Date modification |
+
+### 7.2 Table Stores (Magasins)
+| Colonne | Type | Description |
+|---------|------|-------------|
+| id | UUID | Identifiant unique |
+| owner_id | UUID (FK) | Propriétaire |
+| name | VARCHAR(100) | Nom du magasin |
+| description | TEXT | Description |
+| logo_url | VARCHAR(255) | URL du logo |
+| category | VARCHAR(50) | Catégorie |
+| status | ENUM('pending','approved','rejected','suspended') | Statut |
+| created_at | TIMESTAMP | Date création |
+
+### 7.3 Table Products (Produits)
+| Colonne | Type | Description |
+|---------|------|-------------|
+| id | UUID | Identifiant unique |
+| store_id | UUID (FK) | Magasin |
+| name | VARCHAR(150) | Nom du produit |
+| description | TEXT | Description |
+| price | DECIMAL(10,2) | Prix en FCFA |
+| brand | VARCHAR(100) | Marque |
+| model | VARCHAR(100) | Modèle |
+| color | VARCHAR(50) | Couleur |
+| size | VARCHAR(10) | Taille |
+| stock_quantity | INTEGER | Quantité en stock |
+| discount_price | DECIMAL(10,2) | Prix réduit |
+| is_active | BOOLEAN | Produit actif |
+| created_at | TIMESTAMP | Date création |
+
+### 7.4 Table Product_Images
+| Colonne | Type | Description |
+|---------|------|-------------|
+| id | UUID | Identifiant unique |
+| product_id | UUID (FK) | Produit |
+| image_url | VARCHAR(255) | URL image |
+| is_primary | BOOLEAN | Image principale |
+| order | INTEGER | Ordre affichage |
+
+### 7.5 Table Orders (Commandes)
+| Colonne | Type | Description |
+|---------|------|-------------|
+| id | UUID | Identifiant unique |
+| customer_id | UUID (FK) | Client |
+| store_id | UUID (FK) | Magasin |
+| status | ENUM('pending','confirmed','preparing','shipped','delivered','cancelled') | Statut |
+| total_amount | DECIMAL(10,2) | Montant total |
+| delivery_quarter | VARCHAR(100) | Quartier |
+| delivery_street | VARCHAR(200) | Rue |
+| delivery_description | TEXT | Indications |
+| door_photo_url | VARCHAR(255) | Photo de porte |
+| door_latitude | DECIMAL(10,8) | Latitude photo |
+| door_longitude | DECIMAL(11,8) | Longitude photo |
+| cancellation_fee | DECIMAL(10,2) | Frais annulation |
+| created_at | TIMESTAMP | Date création |
+| updated_at | TIMESTAMP | Date modification |
+
+### 7.6 Table Order_Items
+| Colonne | Type | Description |
+|---------|------|-------------|
+| id | UUID | Identifiant unique |
+| order_id | UUID (FK) | Commande |
+| product_id | UUID (FK) | Produit |
+| quantity | INTEGER | Quantité |
+| unit_price | DECIMAL(10,2) | Prix unitaire |
+| color | VARCHAR(50) | Couleur choisie |
+| size | VARCHAR(10) | Taille choisie |
+
+### 7.7 Table Payments (Paiements)
+| Colonne | Type | Description |
+|---------|------|-------------|
+| id | UUID | Identifiant unique |
+| order_id | UUID (FK) | Commande |
+| amount | DECIMAL(10,2) | Montant |
+| method | ENUM('airtel_money','moov_money') | Méthode |
+| transaction_id | VARCHAR(100) | ID transaction externe |
+| status | ENUM('pending','success','failed','refunded') | Statut |
+| created_at | TIMESTAMP | Date |
+
+---
+
+## 8. DIAGRAMME DE FLUX - PROCESSUS DE COMMANDE
+
+```
+┌─────────┐     ┌─────────┐     ┌─────────┐     ┌─────────┐     ┌─────────┐
+│ Client  │     │ Panier  │     │Adresse  │     │Paiement │     │Commande │
+│parcourt │────▶│produits │────▶│livraison│────▶│Airtel/  │────▶│confirmée│
+│produits │     │sélection│     │+ photo  │     │Moov     │     │         │
+└─────────┘     └─────────┘     └─────────┘     └─────────┘     └────┬────┘
+                                                                     │
+                              ┌──────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           VENDEUR                                        │
+│                                                                          │
+│  ┌─────────┐     ┌─────────┐     ┌─────────┐     ┌─────────┐           │
+│  │Commande │────▶│Prépara- │────▶│Expédiée │────▶│Livrée   │           │
+│  │confirmée│     │tion     │     │         │     │         │           │
+│  └─────────┘     └─────────┘     └─────────┘     └─────────┘           │
+│                                                                          │
+│  ┌─────────────────────────────────────────────────────────┐           │
+│  │               ANNULATION (avant expédition)              │           │
+│  │  Client demande → Calcul frais transport → Client paie   │           │
+│  │  frais → Remboursement commande → Statut: Annulée        │           │
+│  └─────────────────────────────────────────────────────────┘           │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 9. API ENDPOINTS PRINCIPAUX
+
+### 9.1 Authentification
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| POST | /api/auth/register/customer | Inscription client |
+| POST | /api/auth/register/vendor | Inscription vendeur |
+| POST | /api/auth/login | Connexion |
+| POST | /api/auth/google | Connexion Google |
+| POST | /api/auth/forgot-password | Mot de passe oublié |
+| POST | /api/auth/reset-password | Réinitialiser mot de passe |
+
+### 9.2 Magasins
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| GET | /api/stores | Liste magasins approuvés |
+| GET | /api/stores/:id | Détail magasin |
+| GET | /api/admin/stores/pending | Magasins en attente |
+| PUT | /api/admin/stores/:id/approve | Approuver magasin |
+| PUT | /api/admin/stores/:id/reject | Rejeter magasin |
+
+### 9.3 Produits
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| GET | /api/products | Liste produits (filtres) |
+| GET | /api/products/:id | Détail produit |
+| GET | /api/stores/:id/products | Produits d'un magasin |
+| POST | /api/vendor/products | Ajouter produit |
+| PUT | /api/vendor/products/:id | Modifier produit |
+| DELETE | /api/vendor/products/:id | Supprimer produit |
+
+### 9.4 Commandes
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| POST | /api/orders | Créer commande |
+| GET | /api/customer/orders | Commandes du client |
+| GET | /api/vendor/orders | Commandes du vendeur |
+| GET | /api/orders/:id | Détail commande |
+| PUT | /api/vendor/orders/:id/status | Changer statut |
+| POST | /api/orders/:id/cancel | Annuler commande |
+
+### 9.5 Paiements
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| POST | /api/payments/airtel | Paiement Airtel Money |
+| POST | /api/payments/moov | Paiement Moov Money |
+| GET | /api/payments/:id/status | Statut paiement |
+| POST | /api/payments/webhook/airtel | Callback Airtel |
+| POST | /api/payments/webhook/moov | Callback Moov |
+
+
+
+
+
+
+
+
+
+
+
+
+**Ajouts :**
+- ✅ Système de réduction de prix par paliers
+- ✅ Frais d'annulation fixe : 1000 FCFA
+
+
+
+## MODIFICATIONS APPORTÉES
+
+
+
+#### Processus de demande de réduction
+
+```
+┌──────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────┐
+│  Client  │     │   Système    │     │   Vendeur    │     │ Commande │
+│ choisit  │────▶│ envoie       │────▶│ reçoit       │     │ mise à   │
+│ palier   │     │ demande      │     │ demande      │     │ jour      │
+└──────────┘     └──────────────┘     └──────┬───────┘     └──────────┘
+                                             │
+                              ┌──────────────┼──────────────┐
+                              │              │              │
+                              ▼              ▼              ▼
+                         ┌────────┐    ┌────────┐    ┌──────────┐
+                         │Accepter│    │Refuser │    │Contre-   │
+                         │        │    │        │    │proposer  │
+                         └───┬────┘    └───┬────┘    └────┬─────┘
+                             │             │              │
+                             ▼             ▼              ▼
+                      ┌──────────┐  ┌──────────┐  ┌──────────┐
+                      │Prix mis  │  │Prix      │  │Client    │
+                      │à jour    │  │inchangé  │  │accepte/  │
+                      │          │  │          │  │refuse    │
+                      └──────────┘  └──────────┘  └──────────┘
+```
+
+#### Interface de demande de réduction
+
+**Écran Panier → Bouton "Demander une réduction"**
+
+| Élément | Description |
+|---------|-------------|
+| Prix total actuel | Affiche le total de la commande |
+| Liste des paliers | Affiche les 11 paliers disponibles |
+| Montant sélectionné | Le client choisit un palier |
+| Bouton "Envoyer la demande" | Envoie au vendeur |
+| Statut de la demande | En attente / Acceptée / Refusée / Contre-proposition |
+
+#### Notifications liées aux réductions
+
+| Notification | Destinataire | Message |
+|-------------|-------------|---------|
+| Demande reçue | Vendeur | "Un client demande une réduction de X FCFA sur la commande N°Y" |
+| Demande acceptée | Client | "Votre réduction de X FCFA a été acceptée ! Nouveau prix : Z FCFA" |
+| Demande refusée | Client | "Votre demande de réduction a été refusée. Prix inchangé : Z FCFA" |
+| Contre-proposition | Client | "Le vendeur propose une réduction de X FCFA au lieu de Y FCFA" |
+
+---
+
+### 3.4.6 Annulation de Commande (Modifié)
+
+#### Frais d'annulation
+
+| Élément | Valeur |
+|---------|--------|
+| **Frais de transport** | **1 000 FCFA (fixe et obligatoire)** |
+
+#### Règles modifiées
+
+1. L'annulation est possible **uniquement avant l'expédition** de la commande
+2. Les frais d'annulation sont **fixes et obligatoires** : **1 000 FCFA**
+3. Les frais sont payés par le client via **Airtel Money** ou **Moov Money**
+4. Après paiement des frais, le montant de la commande est remboursé intégralement
+5. Les frais de 1 000 FCFA **ne sont pas remboursables**
+
+#### Processus d'annulation (mis à jour)
+
+```
+┌──────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────┐
+│  Client  │     │   Système    │     │   Paiement   │     │ Commande │
+│ demande  │────▶│ calcule      │────▶│ 1000 FCFA    │────▶│ annulée  │
+│ annulation│    │ frais: 1000F │     │ Airtel/Moov  │     │          │
+└──────────┘     └──────────────┘     └──────────────┘     └──────────┘
+```
+
+#### Écran d'annulation
+
+| Élément | Valeur |
+|---------|--------|
+| Message | "L'annulation de commande entraîne des frais de transport de 1 000 FCFA non remboursables." |
+| Montant des frais | **1 000 FCFA** (fixe, non modifiable) |
+| Mode de paiement | Airtel Money ou Moov Money |
+| Confirmation | "Je confirme vouloir annuler ma commande et payer 1 000 FCFA de frais" |
+| Bouton | "Payer 1 000 FCFA et annuler" |
+
+#### Remboursement
+
+| Élément | Description |
+|---------|-------------|
+| Montant remboursé | Prix total de la commande (sans les 1 000 FCFA) |
+| Délai de remboursement | 24 à 72 heures |
+| Méthode de remboursement | Même méthode que le paiement initial |
+
+---
+
+## RÉCAPITULATIF DES FRAIS
+
+| Situation | Frais pour le client |
+|-----------|---------------------|
+| Commande normale | Prix des produits (livraison gratuite) |
+| Demande de réduction acceptée | Prix réduit (livraison gratuite) |
+| Demande de réduction refusée | Prix initial (livraison gratuite) |
+| **Annulation de commande** | **1 000 FCFA (obligatoire)** |
+
+
+ÉCRAN SUPPLÉMENTAIRE : Demande de réduction
+
+MODÈLE DE BASE DE DONNÉES (Mise à jour)
+
+Nouvelle Table : Price_Reduction_Requests
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| id | UUID | Identifiant unique |
+| order_id | UUID (FK) | Commande concernée |
+| customer_id | UUID (FK) | Client demandeur |
+| vendor_id | UUID (FK) | Vendeur |
+| original_price | DECIMAL(10,2) | Prix initial |
+| requested_reduction | DECIMAL(10,2) | Réduction demandée (palier) |
+| proposed_price | DECIMAL(10,2) | Nouveau prix proposé |
+| status | ENUM('pending','accepted','refused','counter_offer') | Statut |
+| counter_offer_amount | DECIMAL(10,2) | Contre-proposition |
+| created_at | TIMESTAMP | Date création |
+| updated_at | TIMESTAMP | Date modification |
+
+Table Orders (Colonnes ajoutées)
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| has_reduction | BOOLEAN | Réduction appliquée |
+| reduction_amount | DECIMAL(10,2) | Montant de la réduction |
+| final_price | DECIMAL(10,2) | Prix final après réduction |
+| cancellation_fee | DECIMAL(10,2) | **Frais d'annulation : 1000 FCFA** |
+
+
+API ENDPOINTS (Ajouts)
+
+Réductions
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| POST | /api/orders/:id/request-reduction | Demander une réduction |
+| GET | /api/vendor/reduction-requests | Demandes reçues (vendeur) |
+| PUT | /api/vendor/reduction-requests/:id/accept | Accepter réduction |
+| PUT | /api/vendor/reduction-requests/:id/refuse | Refuser réduction |
+| PUT | /api/vendor/reduction-requests/:id/counter-offer | Contre-proposition |
+| GET | /api/customer/reduction-requests | Mes demandes (client) |
+
