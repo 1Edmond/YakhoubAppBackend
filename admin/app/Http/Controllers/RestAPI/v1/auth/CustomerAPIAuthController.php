@@ -18,6 +18,7 @@ use App\Utils\SMSModule;
 use Carbon\CarbonInterval;
 use Firebase\JWT\JWT;
 use Illuminate\Http\Request;
+use App\Rules\NniRule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
@@ -48,7 +49,7 @@ class CustomerAPIAuthController extends Controller
             'l_name' => 'required',
             'email' => 'required|unique:users',
             'phone' => 'required|min:6|max:20|unique:users',
-            'nni' => 'required|string|max:20|unique:nni_records,nni_number',
+            'nni' => ['required', 'string', new NniRule(), 'unique:nni_records,nni_number'],
             'password' => 'required|min:6',
         ], [
             'f_name.required' => translate('The first name field is required.'),
@@ -70,7 +71,7 @@ class CustomerAPIAuthController extends Controller
             'email' => $request['email'],
             'phone' => $request['phone'],
             'password' => bcrypt($request['password']),
-            'nni_number' => $request['nni'],
+            
             'temporary_token' => $temporaryToken,
             'referral_code' => Helpers::generate_referer_code(),
             'referred_by' => $referUser?->id ?? null,
@@ -78,7 +79,7 @@ class CustomerAPIAuthController extends Controller
 
         \App\Models\NniRecord::create([
             'user_id' => $user->id,
-            'nni_number' => $request['nni'],
+            
         ]);
 
         $referralData = getWebConfig(name: 'ref_earning_customer');
@@ -622,7 +623,7 @@ class CustomerAPIAuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'nullable|max:255',
             'phone' => 'required|string|min:6|max:15',
-            'nni' => 'nullable|string|max:20|unique:nni_records,nni_number',
+            'nni' => ['required', 'string', new NniRule(), 'unique:nni_records,nni_number'],
         ]);
 
         if ($validator->fails()) {
@@ -647,7 +648,7 @@ class CustomerAPIAuthController extends Controller
             'email' => $request['email'],
             'phone' => $request['phone'],
             'password' => bcrypt(rand(11111111, 99999999)),
-            'nni_number' => $request['nni'] ?? null,
+            
             'temporary_token' => $temporaryToken,
             'app_language' => 'en',
             'is_phone_verified' => 1,
@@ -658,7 +659,7 @@ class CustomerAPIAuthController extends Controller
         if (!empty($request['nni'])) {
             \App\Models\NniRecord::create([
                 'user_id' => $user->id,
-                'nni_number' => $request['nni'],
+                
             ]);
         }
 
@@ -803,7 +804,7 @@ class CustomerAPIAuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users|max:255',
             'phone' => 'required|min:6|max:20',
-            'nni' => 'nullable|string|max:20|unique:nni_records,nni_number',
+            'nni' => ['required', 'string', new NniRule(), 'unique:nni_records,nni_number'],
         ]);
 
         if ($validator->fails()) {
@@ -825,7 +826,7 @@ class CustomerAPIAuthController extends Controller
             'email' => $request['email'],
             'phone' => $request['phone'],
             'password' => bcrypt(rand(11111111, 99999999)),
-            'nni_number' => $request['nni'] ?? null,
+            
             'temporary_token' => $temporaryToken,
             'app_language' => 'en',
             'email_verified_at' => now(),
@@ -836,7 +837,7 @@ class CustomerAPIAuthController extends Controller
         if (!empty($request['nni'])) {
             \App\Models\NniRecord::create([
                 'user_id' => $user->id,
-                'nni_number' => $request['nni'],
+                
             ]);
         }
 

@@ -13,6 +13,7 @@ use App\Utils\ImageManager;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Rules\NniRule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
@@ -47,7 +48,7 @@ class RegisterController extends Controller
 
             \App\Models\NniRecord::create([
                 'user_id' => $seller->id, // Here we use seller ID, which might need adjusting if nni_records strictly means 'users' table
-                'nni_number' => $request->nni,
+                
             ]);
 
 

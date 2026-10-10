@@ -32,6 +32,10 @@ use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Exceptions\ManualTransferException;
+use App\Services\ManualTransferService;
+use App\Exceptions\OrderCancellationException;
+use App\Services\OrderCancellationService;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
 
@@ -79,15 +83,24 @@ class OrderController extends Controller
 
     }
 
-    public function order_cancel(Request $request)
+    public function order_cancel(Request $request, OrderCancellationService $service): \Illuminate\Http\JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'order_id' => 'required'
-        ]);
-
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), ['order_id' => 'required|integer|min:1']);
         if ($validator->fails()) {
-            return response()->json(['errors' => Helpers::validationErrorProcessor($validator)], 403);
+            return response()->json(['errors' => \App\Utils\Helpers::validationErrorProcessor($validator)], 422);
         }
+
+        try {
+            $order = $service->cancel($request->user(), (int) $request->order_id);
+        } catch (OrderCancellationException $e) {
+            return response()->json(['message' => $e->getMessage()], $e->httpStatus);
+        }
+
+        return response()->json([
+            'message' => translate('order_canceled_successfully'),
+            'cancellation_fee' => (float) $order->cancellation_fee,
+        ], 200);
+    }
         $order = Order::with('customer')->where(['id' => $request->order_id])->first();
 
         if (!$order) {
@@ -209,25 +222,13 @@ class OrderController extends Controller
         
         $this->updateTchadFields($request, $orderIds);
 
-        if ($request->payment_method == 'manual_transfer' && $request->has('transaction_reference')) {
-            $proofImage = null;
-            if ($request->hasFile('proof_image')) {
-                $proofImage = \App\Utils\ImageManager::upload('transfer_proof/', 'png', $request->file('proof_image'));
-            }
-            
-            // Get available account (same logic as getAvailable)
-            $availableAccount = \App\Models\TransferAccount::where('is_active', 1)->first(); // Simplified for fallback
-            $accountId = $request->transfer_account_id ?? ($availableAccount ? $availableAccount->id : null);
-
-            foreach ($orderIds as $orderId) {
-                \App\Models\OrderTransferProof::create([
-                    'order_id' => $orderId,
-                    'transfer_account_id' => $accountId,
-                    'transaction_reference' => $request->transaction_reference,
-                    'proof_image' => $proofImage,
-                    'transfer_fee_amount' => $request->transfer_fee_amount ?? 0,
-                    'status' => 'pending'
-                ]);
+        $transfer = [];
+        if ($request->payment_method == 'manual_transfer') {
+            try {
+                $transfer = app(ManualTransferService::class)->recordProofs($orderIds, $request);
+            } catch (ManualTransferException $e) {
+                \App\Models\Order::whereIn('id', $orderIds)->update(['order_status' => 'failed', 'payment_status' => 'unpaid']);
+                return response()->json(['message' => $e->getMessage()], $e->httpStatus);
             }
         }
 
@@ -354,25 +355,13 @@ class OrderController extends Controller
         
         $this->updateTchadFields($request, $orderIds);
 
-        if ($request->payment_method == 'manual_transfer' && $request->has('transaction_reference')) {
-            $proofImage = null;
-            if ($request->hasFile('proof_image')) {
-                $proofImage = \App\Utils\ImageManager::upload('transfer_proof/', 'png', $request->file('proof_image'));
-            }
-            
-            // Get available account (same logic as getAvailable)
-            $availableAccount = \App\Models\TransferAccount::where('is_active', 1)->first(); // Simplified for fallback
-            $accountId = $request->transfer_account_id ?? ($availableAccount ? $availableAccount->id : null);
-
-            foreach ($orderIds as $orderId) {
-                \App\Models\OrderTransferProof::create([
-                    'order_id' => $orderId,
-                    'transfer_account_id' => $accountId,
-                    'transaction_reference' => $request->transaction_reference,
-                    'proof_image' => $proofImage,
-                    'transfer_fee_amount' => $request->transfer_fee_amount ?? 0,
-                    'status' => 'pending'
-                ]);
+        $transfer = [];
+        if ($request->payment_method == 'manual_transfer') {
+            try {
+                $transfer = app(ManualTransferService::class)->recordProofs($orderIds, $request);
+            } catch (ManualTransferException $e) {
+                \App\Models\Order::whereIn('id', $orderIds)->update(['order_status' => 'failed', 'payment_status' => 'unpaid']);
+                return response()->json(['message' => $e->getMessage()], $e->httpStatus);
             }
         }
 
@@ -455,25 +444,13 @@ class OrderController extends Controller
             
         $this->updateTchadFields($request, $orderIds);
 
-        if ($request->payment_method == 'manual_transfer' && $request->has('transaction_reference')) {
-            $proofImage = null;
-            if ($request->hasFile('proof_image')) {
-                $proofImage = \App\Utils\ImageManager::upload('transfer_proof/', 'png', $request->file('proof_image'));
-            }
-            
-            // Get available account (same logic as getAvailable)
-            $availableAccount = \App\Models\TransferAccount::where('is_active', 1)->first(); // Simplified for fallback
-            $accountId = $request->transfer_account_id ?? ($availableAccount ? $availableAccount->id : null);
-
-            foreach ($orderIds as $orderId) {
-                \App\Models\OrderTransferProof::create([
-                    'order_id' => $orderId,
-                    'transfer_account_id' => $accountId,
-                    'transaction_reference' => $request->transaction_reference,
-                    'proof_image' => $proofImage,
-                    'transfer_fee_amount' => $request->transfer_fee_amount ?? 0,
-                    'status' => 'pending'
-                ]);
+        $transfer = [];
+        if ($request->payment_method == 'manual_transfer') {
+            try {
+                $transfer = app(ManualTransferService::class)->recordProofs($orderIds, $request);
+            } catch (ManualTransferException $e) {
+                \App\Models\Order::whereIn('id', $orderIds)->update(['order_status' => 'failed', 'payment_status' => 'unpaid']);
+                return response()->json(['message' => $e->getMessage()], $e->httpStatus);
             }
         }
 

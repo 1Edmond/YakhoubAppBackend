@@ -53,6 +53,15 @@ Route::group(['namespace' => 'RestAPI\v3\seller', 'prefix' => 'v3/seller', 'midd
     });
 
         Route::group(['middleware' => ['seller_api_auth']], function () {
+        Route::group(['prefix' => 'transfer-accounts'], function () {
+            Route::get('/', [\App\Http\Controllers\RestAPI\v3\seller\SellerTransferAccountController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\RestAPI\v3\seller\SellerTransferAccountController::class, 'store']);
+            Route::put('{id}', [\App\Http\Controllers\RestAPI\v3\seller\SellerTransferAccountController::class, 'update']);
+            Route::delete('{id}', [\App\Http\Controllers\RestAPI\v3\seller\SellerTransferAccountController::class, 'destroy']);
+        });
+        Route::get('transfer-operators', [\App\Http\Controllers\RestAPI\v3\seller\SellerTransferAccountController::class, 'operators']);
+        Route::put('orders/{id}/validate-transfer', [\App\Http\Controllers\RestAPI\v3\seller\SellerTransferAccountController::class, 'validateTransfer']);
+
         // Vendor reduction requests
         Route::group(['prefix' => 'reduction-requests'], function () {
             Route::get('/', [App\Http\Controllers\RestAPI\v3\seller\ReductionController::class, 'getRequests']);
@@ -300,7 +309,5 @@ Route::group(['namespace' => 'RestAPI\v3\seller', 'prefix' => 'v3/seller', 'midd
 
 
 
-Route::get('transfer-operators', function () {
-    return response()->json(\App\Models\TransferOperator::where('is_active', true)->with('fees')->get());
-})->middleware('auth:seller');
+
 

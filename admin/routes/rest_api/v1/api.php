@@ -267,6 +267,7 @@ Route::group(['prefix' => 'v1', 'middleware' => ['api_lang']], function () {
     });
 
     Route::group(['prefix' => 'customer', 'middleware' => 'auth:api'], function () {
+        Route::post('order/cancel', [App\Http\Controllers\RestAPI\v1\OrderController::class, 'order_cancel'])->middleware('throttle:10,1');
         Route::controller(CustomerController::class)->group(function () {
             Route::get('info', 'info');
             Route::put('update-profile', 'update_profile');
@@ -381,7 +382,7 @@ Route::group(['prefix' => 'v1', 'middleware' => ['api_lang']], function () {
         Route::controller(OrderController::class)->group(function () {
             Route::get('track', 'track_by_order_id');
             Route::get('track-order-details', 'track_order_details_history');
-            Route::get('cancel-order', 'order_cancel');
+            
             Route::post('track-order', 'track_order');
         });
     });
@@ -472,15 +473,7 @@ Route::group(['prefix' => 'v1', 'middleware' => ['api_lang']], function () {
         Route::put('cart/negotiations/{requestId}/respond', [App\Http\Controllers\RestAPI\v1\PriceReductionController::class, 'respondToCounterOffer']);
     });
 
-    // Direct reduction aliases for backward compatibility (authenticated)
-    Route::group(['middleware' => ['auth:api']], function () {
-        Route::post('orders/{orderId}/request-reduction', [App\Http\Controllers\RestAPI\v1\PriceReductionController::class, 'createRequest']);
-        Route::get('reduction-requests', [App\Http\Controllers\RestAPI\v1\PriceReductionController::class, 'getMyRequests']);
-        Route::put('reduction-requests/{requestId}/respond', [App\Http\Controllers\RestAPI\v1\PriceReductionController::class, 'respondToCounterOffer']);
-        Route::post('cart/negotiate', [App\Http\Controllers\RestAPI\v1\PriceReductionController::class, 'createCartRequest']);
-        Route::get('cart/negotiations', [App\Http\Controllers\RestAPI\v1\PriceReductionController::class, 'getCartNegotiations']);
-        Route::put('cart/negotiations/{requestId}/respond', [App\Http\Controllers\RestAPI\v1\PriceReductionController::class, 'respondToCounterOffer']);
-    });
+    
 
     // Mobile Payments
     Route::group(['prefix' => 'payments'], function () {

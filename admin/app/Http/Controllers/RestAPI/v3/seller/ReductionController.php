@@ -2,106 +2,59 @@
 
 namespace App\Http\Controllers\RestAPI\v3\seller;
 
+use App\Exceptions\ReductionException;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Services\PriceReductionService;
 use App\Models\PriceReductionRequest;
+use App\Services\PriceReductionService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ReductionController extends Controller
 {
-    protected $reductionService;
-
-    public function __construct(PriceReductionService $reductionService)
+    public function __construct(protected PriceReductionService $reductionService)
     {
-        $this->reductionService = $reductionService;
     }
 
-    public function getRequests(Request $request)
+    public function getRequests(Request $request): JsonResponse
     {
         $seller = $request->seller ?? $request->user();
         $requests = PriceReductionRequest::forVendor($seller->id)
-            ->with(['customer', 'product', 'order'])
-            ->latest()
-            ->get();
+            ->with(['customer', 'product', 'order'])->latest()->get();
+
         return response()->json($requests);
     }
 
-    public function accept(Request $request, $requestId)
+    public function accept(Request $request, int $requestId): JsonResponse
     {
-        $reductionRequest = $this->findActionableRequest($request, $requestId);
-        if (!$reductionRequest instanceof PriceReductionRequest) {
-            return $reductionRequest;
-        }
-
-        return $this->runAction($reductionRequest, PriceReductionRequest::STATUS_ACCEPTED, function () use ($reductionRequest) {
-            return $this->reductionService->acceptRequest($reductionRequest);
-        });
+        $req = $this->findOwned($request, $requestId);
+        return $this->run(fn () => $this->reductionService->acceptRequest($req));
     }
 
-    public function refuse(Request $request, $requestId)
+    public function refuse(Request $request, int $requestId): JsonResponse
     {
-        $reductionRequest = $this->findActionableRequest($request, $requestId);
-        if (!$reductionRequest instanceof PriceReductionRequest) {
-            return $reductionRequest;
-        }
-
-        return $this->runAction($reductionRequest, PriceReductionRequest::STATUS_REFUSED, function () use ($reductionRequest) {
-            return $this->reductionService->refuseRequest($reductionRequest);
-        });
+        $req = $this->findOwned($request, $requestId);
+        return $this->run(fn () => $this->reductionService->refuseRequest($req));
     }
 
-    public function counterOffer(Request $request, $requestId)
+    public function counterOffer(Request $request, int $requestId): JsonResponse
     {
-        $request->validate(['counter_amount' => 'required|numeric|min:0']);
-        $reductionRequest = $this->findActionableRequest($request, $requestId);
-        if (!$reductionRequest instanceof PriceReductionRequest) {
-            return $reductionRequest;
-        }
-
-        if ((int) $reductionRequest->round_number >= 2) {
-            return response()->json(['message' => 'Maximum negotiation rounds reached.'], 422);
-        }
-
-        return $this->runAction($reductionRequest, PriceReductionRequest::STATUS_COUNTER_OFFER, function () use ($reductionRequest, $request) {
-            return $this->reductionService->counterOffer($reductionRequest, $request->counter_amount);
-        });
+        $data = $request->validate(['counter_amount' => ['required', 'numeric', 'gt:0']]);
+        $req = $this->findOwned($request, $requestId);
+        return $this->run(fn () => $this->reductionService->counterOffer($req, (float) $data['counter_amount']));
     }
 
-    /**
-     * Returns the request if the seller may still act on it (status pending),
-     * otherwise a JSON error response.
-     */
-    private function findActionableRequest(Request $request, $requestId)
+    private function findOwned(Request $request, int $requestId): PriceReductionRequest
     {
         $seller = $request->seller ?? $request->user();
-        $reductionRequest = PriceReductionRequest::where('vendor_id', $seller->id)->find($requestId);
-
-        if (!$reductionRequest) {
-            return response()->json(['message' => 'Reduction request not found.'], 404);
-        }
-
-        if ($reductionRequest->status !== PriceReductionRequest::STATUS_PENDING) {
-            return response()->json(['message' => 'This negotiation has already been processed.'], 422);
-        }
-
-        return $reductionRequest;
+        return PriceReductionRequest::where('vendor_id', $seller->id)->findOrFail($requestId);
     }
 
-    /**
-     * Executes the service action. If a side effect (event / notification) fails
-     * after the status was persisted, the action is still reported as successful.
-     */
-    private function runAction(PriceReductionRequest $reductionRequest, string $expectedStatus, callable $action)
+    private function run(callable $fn): JsonResponse
     {
         try {
-            $result = $action();
-            return response()->json($result);
-        } catch (\Throwable $e) {
-            $fresh = PriceReductionRequest::find($reductionRequest->id);
-            if ($fresh && $fresh->status === $expectedStatus) {
-                return response()->json($fresh);
-            }
-            return response()->json(['message' => $e->getMessage()], 422);
+            return response()->json($fn());
+        } catch (ReductionException $e) {
+            return response()->json(['message' => $e->getMessage()], $e->httpStatus);
         }
     }
 }

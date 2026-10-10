@@ -53,3 +53,9 @@ node_modules/
 openspec
 architecture-audit
 docs
+
+# Secrets
+storage/oauth-*.key
+.env
+composer.phar
+
