@@ -87,7 +87,7 @@ class CartController extends Controller
                 }
             }
 
-            $cart->map(function ($data) use ($request, $totalTax, $taxConfig) {
+            $cart = $cart->map(function ($data) use ($request, $totalTax, $taxConfig) {
 
                 foreach ($totalTax as $cartItem) {
                     if ($cartItem['seller_id'] == $data['seller_id'] && $cartItem['seller_is'] == $data['seller_is']) {
@@ -131,7 +131,8 @@ class CartController extends Controller
                     }
                 }
 
-                $data['discount'] = getProductPriceByType(product: $data['product'], type: 'discounted_amount', result: 'value', price: $data['price']);
+                $catalogDiscount = (float) getProductPriceByType(product: $data['product'], type: 'discounted_amount', result: 'value', price: $data['price']);
+                $data['discount'] = $catalogDiscount;
 
                 // Attach negotiation info strictly for this cart item (unfulfilled)
                 $negotiation = \App\Models\PriceReductionRequest::where('cart_group_id', $data->cart_group_id)
@@ -141,14 +142,15 @@ class CartController extends Controller
 
                 if ($negotiation) {
                     $data['negotiation_status'] = $negotiation->status;
-                    $data['negotiation_reduction'] = floatval($negotiation->requested_reduction);
+                    $acceptedReduction = floatval($negotiation->applied_reduction ?: ($negotiation->counter_offer_amount > 0 ? $negotiation->counter_offer_amount : $negotiation->requested_reduction));
+                    $data['negotiation_reduction'] = $acceptedReduction;
                     $data['counter_offer_amount'] = floatval($negotiation->counter_offer_amount);
                     $data['negotiation_id'] = $negotiation->id;
                     $data['negotiation_round'] = $negotiation->round_number;
 
                     if ($negotiation->status == 'accepted') {
-                        $data['discount'] = max($data['discount'], floatval($negotiation->requested_reduction));
-                        $data['negotiated_price'] = max(0, $data['price'] - $negotiation->requested_reduction);
+                        $data['discount'] = $catalogDiscount + $acceptedReduction;
+                        $data['negotiated_price'] = max(0, (float)$data['price'] - $data['discount']);
                     }
                 } else {
                     $data['negotiation_status'] = 'none';

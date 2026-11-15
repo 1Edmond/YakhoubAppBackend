@@ -990,14 +990,18 @@ class OrderController extends Controller
             \App\Models\Order::whereIn('id', $orderIds)->update($dataToUpdate);
             $orders = \App\Models\Order::whereIn('id', $orderIds)->get();
             foreach ($orders as $ord) {
-                $shippingData = is_array($ord->shipping_address_data) 
-                    ? $ord->shipping_address_data 
-                    : json_decode($ord->shipping_address_data ?? '{}', true);
-                if (is_array($shippingData)) {
-                    $shippingData = array_merge($shippingData, $dataToUpdate);
-                    $ord->shipping_address_data = json_encode($shippingData);
-                    $ord->save();
+                $shippingData = $ord->shipping_address_data;
+                if (is_object($shippingData)) {
+                    $shippingData = json_decode(json_encode($shippingData), true);
+                } elseif (is_string($shippingData)) {
+                    $shippingData = json_decode($shippingData, true);
                 }
+                if (!is_array($shippingData)) {
+                    $shippingData = [];
+                }
+                $shippingData = array_merge($shippingData, $dataToUpdate);
+                $ord->shipping_address_data = (object) $shippingData;
+                $ord->save();
             }
         }
     }
