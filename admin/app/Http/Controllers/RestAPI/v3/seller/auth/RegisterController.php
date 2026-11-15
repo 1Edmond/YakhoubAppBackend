@@ -46,11 +46,14 @@ class RegisterController extends Controller
             // The nni_records table references user_id. We will assume user_id is the seller id in this context or create it.
             $seller->save();
 
-            \App\Models\NniRecord::create([
-                'user_id' => $seller->id, // Here we use seller ID, which might need adjusting if nni_records strictly means 'users' table
-                
-            ]);
-
+            if (!empty($request->nni)) {
+                \App\Models\NniRecord::create([
+                    'seller_id' => $seller->id,
+                    'nni_number' => $request->nni,
+                    'document_type' => 'nni',
+                    'is_verified' => false,
+                ]);
+            }
 
             $shop = new Shop();
             $shop->seller_id = $seller->id;
@@ -61,7 +64,7 @@ class RegisterController extends Controller
             $shop->image_storage_type = $request->has('logo') ? $storage : null;
             $shop->banner =  $request->file('banner') ? ImageManager::upload('shop/banner/', 'webp', $request->file('banner')) : null;
             $shop->banner_storage_type = $request->has('banner') ? $storage : null;
-            $shop->bottom_banner = ImageManager::upload('shop/banner/', 'webp', $request->file('bottom_banner'));
+            $shop->bottom_banner = $request->file('bottom_banner') ? ImageManager::upload('shop/banner/', 'webp', $request->file('bottom_banner')) : null;
             $shop->bottom_banner_storage_type = $request->has('bottom_banner') ? $storage : null;
             $shop->tax_identification_number = $request['tax_identification_number'] ?? '';
             $shop->tin_expire_date = $request['tin_expire_date'] ? Carbon::parse($request['tin_expire_date']) : null;
@@ -92,7 +95,11 @@ class RegisterController extends Controller
                 'userType' => 'vendor',
                 'templateName' => 'registration',
             ];
-            event(new VendorRegistrationEvent(email: $request['email'], data: $data));
+            try {
+                event(new VendorRegistrationEvent(email: $request['email'], data: $data));
+            } catch (\Exception $e) {
+                info('Vendor registration notification failed: ' . $e->getMessage());
+            }
             return response()->json(['message' => 'Shop apply successfully!'], 200);
 
         } catch (\Exception $e) {

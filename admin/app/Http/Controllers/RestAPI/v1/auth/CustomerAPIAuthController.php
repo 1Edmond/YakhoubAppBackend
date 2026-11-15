@@ -77,10 +77,14 @@ class CustomerAPIAuthController extends Controller
             'referred_by' => $referUser?->id ?? null,
         ]);
 
-        \App\Models\NniRecord::create([
-            'user_id' => $user->id,
-            
-        ]);
+        if (!empty($request['nni'])) {
+            \App\Models\NniRecord::create([
+                'user_id' => $user->id,
+                'nni_number' => $request['nni'],
+                'document_type' => 'nni',
+                'is_verified' => false,
+            ]);
+        }
 
         $referralData = getWebConfig(name: 'ref_earning_customer');
         $referralEarningRate = $this->businessSettingRepo->getFirstWhere(params: ['type' => 'ref_earning_exchange_rate']);
@@ -659,7 +663,9 @@ class CustomerAPIAuthController extends Controller
         if (!empty($request['nni'])) {
             \App\Models\NniRecord::create([
                 'user_id' => $user->id,
-                
+                'nni_number' => $request['nni'],
+                'document_type' => 'nni',
+                'is_verified' => false,
             ]);
         }
 
@@ -837,7 +843,9 @@ class CustomerAPIAuthController extends Controller
         if (!empty($request['nni'])) {
             \App\Models\NniRecord::create([
                 'user_id' => $user->id,
-                
+                'nni_number' => $request['nni'],
+                'document_type' => 'nni',
+                'is_verified' => false,
             ]);
         }
 

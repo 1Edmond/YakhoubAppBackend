@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class NniRecord extends Model
 {
     protected $fillable = [
-        'user_id', 'nni_number', 'document_type', 'document_photo_url', 
+        'user_id', 'seller_id', 'nni_number', 'document_type', 'document_photo_url', 
         'document_photo_storage', 'is_verified', 'verified_at', 'verified_by'
     ];
 
@@ -19,6 +19,11 @@ class NniRecord extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function seller(): BelongsTo
+    {
+        return $this->belongsTo(Seller::class);
     }
 
     public function scopeVerified($query)

@@ -63,6 +63,8 @@ class SellerRegistrationRequest extends FormRequest
             'email.required' => translate('Email is required.'),
             'email.unique' => translate('This email is already registered.'),
             'phone.unique' => translate('This phone number is already registered.'),
+            'nni.required' => translate('NNI is required.'),
+            'nni.unique' => translate('This NNI is already registered.'),
             'password.min' => translate('Password must be at least 8 characters.'),
 
             'image.required' => translate('Profile image is required.'),
