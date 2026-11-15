@@ -83,7 +83,7 @@ if (!function_exists('getDefaultLanguage')) {
             $lang = session('local');
         } else {
             $data = getWebConfig('language');
-            $code = 'en';
+            $code = 'fr';
             $direction = 'ltr';
             foreach ($data as $ln) {
                 if (array_key_exists('default', $ln) && $ln['default']) {

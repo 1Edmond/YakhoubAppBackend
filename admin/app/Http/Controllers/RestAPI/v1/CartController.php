@@ -134,7 +134,7 @@ class CartController extends Controller
                 $data['discount'] = getProductPriceByType(product: $data['product'], type: 'discounted_amount', result: 'value', price: $data['price']);
 
                 // Attach negotiation info strictly for this cart item (unfulfilled)
-                $negotiation = \App\Models\PriceReductionRequest::where('cart_id', $data->id)
+                $negotiation = \App\Models\PriceReductionRequest::where('cart_group_id', $data->cart_group_id)
                     ->whereNull('order_id')
                     ->latest()
                     ->first();
@@ -220,7 +220,7 @@ class CartController extends Controller
         ]);
 
         // Clean up or refuse unfulfilled negotiations tied to this cart item
-        \App\Models\PriceReductionRequest::where('cart_id', $request->key)
+        \App\Models\PriceReductionRequest::where('cart_group_id', $cart->cart_group_id)
             ->whereNull('order_id')
             ->delete();
 
@@ -244,10 +244,11 @@ class CartController extends Controller
         $cartIds = Cart::where([
             'customer_id' => ($user == 'offline' ? $request->guest_id : $user->id),
             'is_guest' => ($user == 'offline' ? 1 : '0'),
-        ])->pluck('id')->toArray();
+        ])->pluck('id')->toArray(); 
+        $cartGroupIds = Cart::where(['customer_id' => ($user == 'offline' ? $request->guest_id : $user->id), 'is_guest' => ($user == 'offline' ? 1 : '0')])->pluck('cart_group_id')->toArray();
 
         if (!empty($cartIds)) {
-            \App\Models\PriceReductionRequest::whereIn('cart_id', $cartIds)
+            \App\Models\PriceReductionRequest::whereIn('cart_group_id', $cartGroupIds)
                 ->whereNull('order_id')
                 ->delete();
         }
@@ -393,3 +394,6 @@ class CartController extends Controller
         return response()->json(['message' => translate('Unauthorized')], 401);
     }
 }
+
+
+

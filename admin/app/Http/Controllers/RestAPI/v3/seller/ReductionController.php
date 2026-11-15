@@ -18,8 +18,12 @@ class ReductionController extends Controller
     public function getRequests(Request $request): JsonResponse
     {
         $seller = $request->seller ?? $request->user();
-        $requests = PriceReductionRequest::forVendor($seller->id)
-            ->with(['customer', 'product', 'order'])->latest()->get();
+        $sellerId = $seller ? ($seller->id ?? $seller['id'] ?? null) : null;
+        if (!$sellerId) {
+            return response()->json([], 200);
+        }
+        $requests = PriceReductionRequest::forVendor($sellerId)
+            ->with(['customer', 'carts.product', 'order'])->latest()->get();
 
         return response()->json($requests);
     }

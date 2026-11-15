@@ -736,6 +736,18 @@
                 </div>
             @endif
 
+
+            <div class="v2-ctx-group">
+                <div class="v2-ctx-group-head"><span>Paiements Mobile Tchad</span></div>
+                <a class="v2-nav-item {{ Request::is('admin/third-party/payment-method*') ? 'v2-is-active' : '' }}" data-item="airtel-moov-payment" href="{{ route('admin.third-party.payment-method.index') }}">
+                    <span class="v2-nav-btn"><span class="v2-nav-label">API Airtel & Moov Money</span></span>
+                    <div class="v2-nav-right"><button class="v2-pin-btn" type="button" data-pin="airtel-moov-payment" aria-label="Pin"></button></div>
+                </a>
+                <a class="v2-nav-item {{ Request::is('admin/transfer-operators*') ? 'v2-is-active' : '' }}" data-item="transfer-operators" href="{{ route('admin.transfer-operators.index') }}">
+                    <span class="v2-nav-btn"><span class="v2-nav-label">Opérateurs de transfert</span></span>
+                    <div class="v2-nav-right"><button class="v2-pin-btn" type="button" data-pin="transfer-operators" aria-label="Pin"></button></div>
+                </a>
+            </div>
             @if (Helpers::module_permission_check('system_settings'))
                 <div class="v2-ctx-group">
                     <div class="v2-ctx-group-head"><span>{{ translate('System_Settings') }}</span></div>
@@ -888,7 +900,7 @@
 
 <aside class="v2-rail-flyout" id="v2-rail-flyout" aria-hidden="true"></aside>
 
-{{-- Command palette (⌘K) --}}
+{{-- Command palette (âŒ˜K) --}}
 <div class="v2-palette-scrim" id="v2-palette-scrim" hidden>
     <div class="v2-palette">
         <div class="v2-palette-head">
@@ -896,14 +908,15 @@
                  stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="9" cy="9" r="5"/><path d="m13 13 3.5 3.5"/>
             </svg>
-            <input id="v2-palette-input" type="text" placeholder="{{ translate('Jump_to_anything') }} — {{ translate('orders_vendors_settings') }}…" autocomplete="off"/>
+            <input id="v2-palette-input" type="text" placeholder="{{ translate('Jump_to_anything') }} â€” {{ translate('orders_vendors_settings') }}â€¦" autocomplete="off"/>
             <span class="v2-kbd">esc</span>
         </div>
         <div class="v2-palette-list" id="v2-palette-list"></div>
         <div class="v2-palette-foot">
-            <span class="v2-palette-hint"><span class="v2-kbd">↑</span><span class="v2-kbd">↓</span> {{ translate('navigate') }}</span>
-            <span class="v2-palette-hint"><span class="v2-kbd">↵</span> {{ translate('open') }}</span>
+            <span class="v2-palette-hint"><span class="v2-kbd">â†‘</span><span class="v2-kbd">â†“</span> {{ translate('navigate') }}</span>
+            <span class="v2-palette-hint"><span class="v2-kbd">â†µ</span> {{ translate('open') }}</span>
             <span class="v2-palette-hint"><span class="v2-kbd">esc</span> {{ translate('close') }}</span>
         </div>
     </div>
 </div>
+

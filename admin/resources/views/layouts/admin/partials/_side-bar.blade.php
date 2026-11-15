@@ -1144,6 +1144,19 @@
                 </li>
             @endif
 
+            <!-- Transfer Operators -->
+            <li>
+                <a class="nav-link {{ Request::is('admin/transfer-operators*') ? 'active' : '' }}"
+                   href="{{ route('admin.transfer-operators.index') }}"
+                   title="Opérateurs de transfert">
+                    <i class="fi fi-sr-bank"></i>
+                    <span class="aside-mini-hidden-element text-truncate flex-grow-1">
+                        Opérateurs de transfert
+                    </span>
+                </a>
+            </li>
+            <!-- End Transfer Operators -->
+
             @if(Helpers::module_permission_check('system_settings'))
                 <li class="nav-item nav-item_title">
                     <small class="nav-subtitle" title="">

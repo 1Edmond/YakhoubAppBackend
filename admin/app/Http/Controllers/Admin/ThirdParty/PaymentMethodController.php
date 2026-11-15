@@ -38,18 +38,78 @@ class PaymentMethodController extends BaseController
      */
     public function index(Request|null $request, ?string $type = null): View
     {
-        return view('admin-views.third-party.payment-method.index');
+        $airtelSetting = $this->businessSettingRepo->getFirstWhere(params: ['type' => 'airtel_money'])?->value;
+        $airtel = $airtelSetting ? json_decode($airtelSetting, true) : [
+            'status' => 0,
+            'mode' => 'sandbox',
+            'client_id' => '',
+            'client_secret' => '',
+            'merchant_id' => '',
+            'webhook_secret' => '',
+        ];
+
+        $moovSetting = $this->businessSettingRepo->getFirstWhere(params: ['type' => 'moov_money'])?->value;
+        $moov = $moovSetting ? json_decode($moovSetting, true) : [
+            'status' => 0,
+            'mode' => 'sandbox',
+            'client_id' => '',
+            'client_secret' => '',
+            'merchant_id' => '',
+            'webhook_secret' => '',
+        ];
+
+        return view('admin-views.third-party.payment-method.index', compact('airtel', 'moov'));
     }
 
-    public function UpdatePaymentConfig(PaymentMethodUpdateRequest $request): RedirectResponse
+    public function UpdatePaymentConfig(Request $request): RedirectResponse
     {
-        ToastMagic::info(translate('Digital_payment_methods_are_disabled'));
+        $gateway = $request->input('gateway');
+
+        if (!in_array($gateway, ['airtel_money', 'moov_money'])) {
+            ToastMagic::error(translate('invalid_payment_gateway'));
+            return back();
+        }
+
+        $config = [
+            'status' => (int)$request->input('status', 0),
+            'mode' => $request->input('mode', 'sandbox'),
+            'client_id' => $request->input('client_id', ''),
+            'client_secret' => $request->input('client_secret', ''),
+            'merchant_id' => $request->input('merchant_id', ''),
+            'webhook_secret' => $request->input('webhook_secret', ''),
+        ];
+
+        $this->businessSettingRepo->updateOrInsert(type: $gateway, value: json_encode($config));
+
+        clearWebConfigCacheKeys();
+        ToastMagic::success(translate('payment_settings_updated_successfully'));
         return redirect()->route('admin.third-party.payment-method.index');
     }
 
     public function UpdateStatus(Request $request): RedirectResponse
     {
-        ToastMagic::info(translate('Digital_payment_methods_are_disabled'));
+        $gateway = $request->input('gateway');
+
+        if (!in_array($gateway, ['airtel_money', 'moov_money'])) {
+            ToastMagic::error(translate('invalid_payment_gateway'));
+            return back();
+        }
+
+        $existingSetting = $this->businessSettingRepo->getFirstWhere(params: ['type' => $gateway])?->value;
+        $config = $existingSetting ? json_decode($existingSetting, true) : [
+            'mode' => 'sandbox',
+            'client_id' => '',
+            'client_secret' => '',
+            'merchant_id' => '',
+            'webhook_secret' => '',
+        ];
+
+        $config['status'] = (int)$request->input('status', 0);
+
+        $this->businessSettingRepo->updateOrInsert(type: $gateway, value: json_encode($config));
+
+        clearWebConfigCacheKeys();
+        ToastMagic::success(translate('payment_status_updated_successfully'));
         return redirect()->route('admin.third-party.payment-method.index');
     }
 }

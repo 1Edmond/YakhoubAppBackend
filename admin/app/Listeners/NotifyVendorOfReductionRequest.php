@@ -3,12 +3,36 @@
 namespace App\Listeners;
 
 use App\Events\ReductionRequestedEvent;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use App\Models\Seller;
+use App\Traits\PushNotificationTrait;
 
-class NotifyVendorOfReductionRequest implements ShouldQueue
+class NotifyVendorOfReductionRequest
 {
-    public function handle(ReductionRequestedEvent $event)
+    use PushNotificationTrait;
+
+    public function handle(ReductionRequestedEvent $event): void
     {
-        // Notification logic here (e.g., FCM)
+        $request = $event->request;
+        if (!$request) {
+            return;
+        }
+
+        $vendor = $request->vendor ?? $request->seller;
+        if (!$vendor && !empty($request->vendor_id)) {
+            $vendor = Seller::find($request->vendor_id);
+        }
+
+        $fcmToken = $vendor?->cm_firebase_token;
+        if ($fcmToken) {
+            $postData = [
+                'title' => translate('Nouvelle demande de négociation'),
+                'description' => translate('Un client a proposé un prix négocié pour son panier'),
+                'image' => '',
+                'order_id' => '',
+                'type' => 'reduction_request',
+                'request_id' => (string)$request->id,
+            ];
+            $this->sendPushNotificationToDevice($fcmToken, $postData);
+        }
     }
 }

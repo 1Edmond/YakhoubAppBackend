@@ -3,12 +3,12 @@ importScripts('https://www.gstatic.com/firebasejs/8.3.2/firebase-messaging.js');
 importScripts('https://www.gstatic.com/firebasejs/8.3.2/firebase-auth.js');
 
 firebase.initializeApp({
-    apiKey: "AIzaSyCFGqSEiWMItei_AFIUgdM53PWrvyGmjFY",
-    authDomain: "drivevalley-fdb7f.firebaseapp.com",
-    projectId: "drivevalley-fdb7f",
-    storageBucket: "drivevalley-fdb7f.appspot.com",
-    messagingSenderId: "76471554747",
-    appId: "1:76471554747:android:3aa5d58a094e2a036d0f9e",
+    apiKey: "AIzaSyB8ycUpE-lfXzyggQxCzu9qo7x3_lPoWgk",
+    authDomain: "multishop-tchad.firebaseapp.com",
+    projectId: "multishop-tchad",
+    storageBucket: "multishop-tchad.firebasestorage.app",
+    messagingSenderId: "282612823748",
+    appId: "1:282612823748:android:9e37a835d7c0cba98cbb91",
     measurementId: ""
 });
 

@@ -112,7 +112,7 @@ class AppServiceProvider extends ServiceProvider
         }
         
         if (config('app.url')) {
-            \URL::forceRootUrl(config('app.url'));
+            // \URL::forceRootUrl(config('app.url'));
         }
 
         $this->shareDeliveryPartnerServiceStatusWithCourierConfigScreens();

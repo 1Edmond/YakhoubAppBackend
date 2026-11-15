@@ -39,8 +39,24 @@ class PriceReductionController extends Controller
         return response()->json(PriceReductionRequest::forCustomer($request->user()->id)->latest()->get());
     }
 
+    public function createCartGroupRequest(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'cart_group_id' => ['required', 'string'],
+            'requested_reduction' => ['required', 'numeric', 'gt:0'],
+        ]);
+
+        return $this->run(fn () => response()->json(
+            $this->reductionService->createCartGroupRequest($data['cart_group_id'], $request->user(), (float) $data['requested_reduction']),
+            201
+        ));
+    }
+
     public function createCartRequest(Request $request): JsonResponse
     {
+        if ($request->has('cart_group_id')) {
+            return $this->createCartGroupRequest($request);
+        }
         $data = $request->validate([
             'cart_id' => ['required', 'integer'],
             'requested_reduction' => ['required', 'numeric', 'gt:0'],
@@ -48,7 +64,7 @@ class PriceReductionController extends Controller
         $cart = Cart::where('customer_id', $request->user()->id)->findOrFail($data['cart_id']);
 
         return $this->run(fn () => response()->json(
-            $this->reductionService->createCartRequest($cart, $request->user(), (float) $data['requested_reduction']),
+            $this->reductionService->createCartGroupRequest($cart->cart_group_id, $request->user(), (float) $data['requested_reduction']),
             201
         ));
     }
@@ -56,8 +72,8 @@ class PriceReductionController extends Controller
     public function getCartNegotiations(Request $request): JsonResponse
     {
         $requests = PriceReductionRequest::forCustomer($request->user()->id)
-            ->whereNotNull('cart_id')->whereNull('order_id')->whereHas('cart')
-            ->with(['product', 'vendor'])->latest()->get();
+            ->whereNotNull('cart_group_id')->whereNull('order_id')->whereHas('carts')
+            ->with(['carts.product', 'vendor'])->latest()->get();
 
         return response()->json($requests);
     }

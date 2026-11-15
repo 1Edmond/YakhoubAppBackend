@@ -13,7 +13,7 @@ class PriceReductionRequest extends Model
     const STATUS_COUNTER_OFFER = 'counter_offer';
 
     protected $fillable = [
-        'cart_id', 'product_id', 'cart_base_discount', 'order_id', 'customer_id', 'vendor_id',
+        'cart_group_id', 'cart_base_discount', 'order_id', 'customer_id', 'vendor_id',
         'original_price', 'requested_reduction', 'proposed_price', 'status',
         'counter_offer_amount', 'round_number', 'applied_at', 'applied_reduction',
     ];
@@ -28,11 +28,12 @@ class PriceReductionRequest extends Model
         'applied_at' => 'datetime',
     ];
 
+    public function carts() { return $this->hasMany(Cart::class, 'cart_group_id', 'cart_group_id'); }
     public function cart(): BelongsTo { return $this->belongsTo(Cart::class); }
-    public function product(): BelongsTo { return $this->belongsTo(Product::class); }
     public function order(): BelongsTo { return $this->belongsTo(Order::class); }
     public function customer(): BelongsTo { return $this->belongsTo(User::class, 'customer_id'); }
-    public function vendor(): BelongsTo { return $this->belongsTo(User::class, 'vendor_id'); }
+    public function vendor(): BelongsTo { return $this->belongsTo(Seller::class, 'vendor_id'); }
+    public function seller(): BelongsTo { return $this->belongsTo(Seller::class, 'vendor_id'); }
 
     public function isNegotiationComplete(): bool
     {

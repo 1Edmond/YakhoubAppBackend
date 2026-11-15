@@ -1318,10 +1318,15 @@ class OrderManager
                 vendorCart: $vendorWiseCart
             );
 
-            $cartItemIds = collect($vendorWiseCart['cart_list'])->pluck('id')->toArray();
-            \App\Models\PriceReductionRequest::whereIn('cart_id', $cartItemIds)
-                ->whereNull('order_id')
-                ->update(['order_id' => $order_id]);
+            try {
+                if (!empty($vendorWiseCart['cart_group_id'])) {
+                    \App\Models\PriceReductionRequest::where('cart_group_id', $vendorWiseCart['cart_group_id'])
+                        ->whereNull('order_id')
+                        ->update(['order_id' => $order_id]);
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Could not associate price reduction request with order {$order_id}: " . $e->getMessage());
+            }
 
             $order = Order::with('customer', 'seller.shop', 'details')->find($order_id);
             OrderManager::getAddOrderTransactionsOnGenerateOrder(order: $order, ordersData: $ordersData);

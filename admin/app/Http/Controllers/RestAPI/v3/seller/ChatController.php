@@ -24,6 +24,15 @@ class ChatController extends Controller
     public function list(Request $request, $type):JsonResponse
     {
         $seller = $request->seller;
+        $sellerId = $seller ? ($seller->id ?? $seller['id'] ?? null) : null;
+        if (!$sellerId) {
+            return response()->json([
+                'total_size' => 0,
+                'limit' => '30',
+                'offset' => '1',
+                'chat' => [],
+            ], 200);
+        }
 
         if ($type == 'customer') {
             $withParam = 'customer';
@@ -35,42 +44,55 @@ class ChatController extends Controller
             return response()->json(['message' => translate('Invalid Chatting Type!')], 403);
         }
 
-        $total_size = Chatting::where(['seller_id' => $seller['id']])
+        $offset = max(1, (int) ($request['offset'] ?? 1));
+        $limit = max(1, (int) ($request['limit'] ?? 30));
+
+        $total_size = Chatting::where(['seller_id' => $sellerId])
             ->whereNotNull($idParam)
             ->select($idParam)
             ->distinct()
-            ->get()
             ->count();
 
-        $allChatIds = Chatting::where(['seller_id' => $seller['id']])
+        $allChatIds = Chatting::where(['seller_id' => $sellerId])
             ->whereNotNull($idParam)
             ->select('id', $idParam)
             ->latest()
             ->get()
             ->unique($idParam)
+            ->values()
             ->toArray();
 
-        $uniqueChatIds = array_slice($allChatIds, $request->offset - 1, $request->limit);
+        $startIndex = ($offset - 1) * $limit;
+        $uniqueChatIds = array_slice($allChatIds, $startIndex, $limit);
 
         $chats = [];
         if ($uniqueChatIds) {
             foreach ($uniqueChatIds as $uniqueChatId) {
+                if (empty($uniqueChatId[$idParam])) {
+                    continue;
+                }
                 $userChatting = Chatting::with([$withParam])
-                    ->where(['seller_id' => $seller['id'], $idParam => $uniqueChatId[$idParam]])
+                    ->where(['seller_id' => $sellerId, $idParam => $uniqueChatId[$idParam]])
                     ->whereNotNull($idParam)
                     ->latest()
                     ->first();
 
-                $userChatting->unseen_message_count = Chatting::where(['seller_id' => $seller['id'], $idParam => $userChatting[$idParam], 'seen_by_seller' => '0'])->count();
-                $chats[] = $userChatting;
+                if ($userChatting) {
+                    $userChatting->unseen_message_count = Chatting::where([
+                        'seller_id' => $sellerId,
+                        $idParam => $uniqueChatId[$idParam],
+                        'seen_by_seller' => '0'
+                    ])->count();
+                    $chats[] = $userChatting;
+                }
             }
         }
 
         $data = array(
             'data' => $seller,
             'total_size' => $total_size,
-            'limit' => $request['limit'] ?? '',
-            'offset' => $request['offset'] ?? '',
+            'limit' => (string) $limit,
+            'offset' => (string) $offset,
             'chat' => $chats,
         );
 

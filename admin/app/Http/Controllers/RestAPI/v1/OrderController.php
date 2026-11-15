@@ -101,33 +101,6 @@ class OrderController extends Controller
             'cancellation_fee' => (float) $order->cancellation_fee,
         ], 200);
     }
-        $order = Order::with('customer')->where(['id' => $request->order_id])->first();
-
-        if (!$order) {
-            return response()->json(['message' => translate('order_not_found')], 404);
-        }
-
-        if (in_array($order->order_status, ['delivered', 'canceled', 'returned', 'failed'])) {
-            return response()->json(['message' => translate('status_not_changeable_now')], 403);
-        }
-
-        $customer = $order->customer;
-
-        if ($order->order_status !== 'pending') {
-            $cancellationFee = 1000;
-            if ($customer) {
-                \App\Utils\CustomerManager::create_wallet_transaction($customer->id, $cancellationFee, 'order_cancellation', 'order_id_'.$order->id);
-            }
-        }
-
-        OrderManager::getStockUpdateOnOrderStatusChange($order, 'canceled');
-        Order::where(['id' => $request->order_id])->update([
-            'order_status' => 'canceled',
-            'cancellation_fee' => ($order->order_status !== 'pending') ? 1000 : 0
-        ]);
-
-        return response()->json(translate('order_canceled_successfully'), 200);
-    }
 
     public function place_order(Request $request): JsonResponse
     {

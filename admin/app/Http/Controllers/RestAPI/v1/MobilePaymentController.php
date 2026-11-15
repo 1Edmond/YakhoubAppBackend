@@ -39,6 +39,27 @@ class MobilePaymentController extends Controller
         return $this->webhook($request, 'moov');
     }
 
+    private function getGatewaySettings(string $gateway): array
+    {
+        $dbKey = $gateway . '_money';
+        $setting = \App\Models\BusinessSetting::where('type', $dbKey)->first()?->value;
+        if ($setting) {
+            $parsed = json_decode($setting, true);
+            if (is_array($parsed)) {
+                return $parsed;
+            }
+        }
+
+        return [
+            'status' => (int)config("multishop.payments.$gateway.enabled", 0),
+            'mode' => 'sandbox',
+            'client_id' => config("multishop.payments.$gateway.api_key", ''),
+            'client_secret' => '',
+            'merchant_id' => '',
+            'webhook_secret' => config("multishop.payments.$gateway.webhook_secret", ''),
+        ];
+    }
+
     private function initiate(Request $request, string $gateway): JsonResponse
     {
         $data = $request->validate([
@@ -46,17 +67,19 @@ class MobilePaymentController extends Controller
             'order_id' => ['nullable', 'integer'],
         ]);
 
-        if (!config("multishop.payments.$gateway.enabled")) {
+        $settings = $this->getGatewaySettings($gateway);
+        if (empty($settings['status'])) {
             return $this->notConfigured($gateway);
         }
 
-        return $this->guard(fn () => $this->paymentService->initiatePayment($data + ['gateway' => $gateway]));
+        return $this->guard(fn () => $this->paymentService->initiatePayment($data + ['gateway' => $gateway, 'settings' => $settings]));
     }
 
     private function webhook(Request $request, string $gateway): JsonResponse
     {
-        $secret = config("multishop.payments.$gateway.webhook_secret");
-        if (!config("multishop.payments.$gateway.enabled") || !$secret) {
+        $settings = $this->getGatewaySettings($gateway);
+        $secret = $settings['webhook_secret'] ?? null;
+        if (empty($settings['status']) || !$secret) {
             return $this->notConfigured($gateway);
         }
 

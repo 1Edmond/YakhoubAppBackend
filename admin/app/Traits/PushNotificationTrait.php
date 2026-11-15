@@ -484,16 +484,42 @@ trait PushNotificationTrait
     protected function sendNotificationToHttp(array|null $data): bool|string|null
     {
         try {
-            $key = (array)getWebConfig('push_notification_key');
-            if (isset($key['project_id'])) {
-                $url = 'https://fcm.googleapis.com/v1/projects/' . $key['project_id'] . '/messages:send';
-                $headers = [
-                    'Authorization' => 'Bearer ' . $this->getAccessToken($key),
-                    'Content-Type' => 'application/json',
-                ];
+            $key = getWebConfig('push_notification_key');
+            if (is_string($key)) {
+                $decoded = json_decode($key, true);
+                if (is_array($decoded)) {
+                    $key = $decoded;
+                }
             }
-            return Http::withHeaders($headers)->post($url, $data);
+            $key = (array)$key;
+
+            if (empty($key['project_id']) || empty($key['private_key']) || empty($key['client_email'])) {
+                \Illuminate\Support\Facades\Log::warning('FCM Push Notification: Service Account (push_notification_key) is not configured in Business Settings. Push notification cannot be sent to Google FCM.');
+                return false;
+            }
+
+            $accessToken = $this->getAccessToken($key);
+            if (!$accessToken) {
+                \Illuminate\Support\Facades\Log::error('FCM Push Notification: Failed to generate OAuth2 access token from service account key.');
+                return false;
+            }
+
+            $url = 'https://fcm.googleapis.com/v1/projects/' . $key['project_id'] . '/messages:send';
+            $headers = [
+                'Authorization' => 'Bearer ' . $accessToken,
+                'Content-Type' => 'application/json',
+            ];
+
+            $response = Http::withHeaders($headers)->post($url, $data);
+            if (!$response->successful()) {
+                \Illuminate\Support\Facades\Log::error('FCM Push Notification HTTP error [' . $response->status() . ']: ' . $response->body());
+                return false;
+            }
+
+            \Illuminate\Support\Facades\Log::info('FCM Push Notification sent successfully.');
+            return $response->body();
         } catch (Exception $exception) {
+            \Illuminate\Support\Facades\Log::error('FCM Push Notification exception: ' . $exception->getMessage());
             return false;
         }
     }

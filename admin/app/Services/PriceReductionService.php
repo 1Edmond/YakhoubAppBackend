@@ -69,36 +69,42 @@ class PriceReductionService
         return $request;
     }
 
-    /** Réduction sur une ligne de panier (variante par produit implémentée par l'app). */
-    public function createCartRequest(Cart $cart, $customer, float $requestedReduction): Req
+    /** Réduction sur le groupe de panier (cart_group_id). */
+    public function createCartGroupRequest(string $cartGroupId, $customer, float $requestedReduction): Req
     {
-        $request = DB::transaction(function () use ($cart, $customer, $requestedReduction) {
-            $cart = Cart::whereKey($cart->id)->lockForUpdate()->firstOrFail();
+        $request = DB::transaction(function () use ($cartGroupId, $customer, $requestedReduction) {
+            $carts = Cart::where('cart_group_id', $cartGroupId)->lockForUpdate()->get();
 
-            if ((string) $cart->customer_id !== (string) $customer->id) {
+            if ($carts->isEmpty()) {
+                throw new ReductionException(translate('not_found'), 404);
+            }
+
+            $firstCart = $carts->first();
+
+            if ((string) $firstCart->customer_id !== (string) $customer->id) {
                 throw new ReductionException(translate('not_found'), 404);
             }
             $this->assertValidTier($requestedReduction);
 
-            $unitPrice = (float) $cart->price;
-            $baseDiscount = (float) $cart->discount;
-            if ($requestedReduction >= ($unitPrice - $baseDiscount)) {
+            $totalPrice = $carts->sum(function ($c) { return (float) $c->price * (int) $c->quantity; });
+            $totalDiscount = $carts->sum(function ($c) { return (float) $c->discount * (int) $c->quantity; });
+
+            if ($requestedReduction >= ($totalPrice - $totalDiscount)) {
                 throw new ReductionException(translate('reduction_exceeds_price'), 422);
             }
-            if (Req::where('cart_id', $cart->id)->whereIn('status', [Req::STATUS_PENDING, Req::STATUS_COUNTER_OFFER, Req::STATUS_ACCEPTED])->exists()) {
+            if (Req::where('cart_group_id', $cartGroupId)->whereIn('status', [Req::STATUS_PENDING, Req::STATUS_COUNTER_OFFER, Req::STATUS_ACCEPTED])->exists()) {
                 throw new ReductionException(translate('reduction_already_in_progress'), 422);
             }
 
             return Req::create([
-                'cart_id' => $cart->id,
-                'product_id' => $cart->product_id,
-                'cart_base_discount' => $baseDiscount,
+                'cart_group_id' => $cartGroupId,
+                'cart_base_discount' => $totalDiscount,
                 'order_id' => null,
                 'customer_id' => $customer->id,
-                'vendor_id' => $cart->seller_is == 'admin' ? 1 : $cart->seller_id,
-                'original_price' => $unitPrice,
+                'vendor_id' => $firstCart->seller_is == 'admin' ? 1 : $firstCart->seller_id,
+                'original_price' => $totalPrice,
                 'requested_reduction' => $requestedReduction,
-                'proposed_price' => $unitPrice - $baseDiscount - $requestedReduction,
+                'proposed_price' => $totalPrice - $totalDiscount - $requestedReduction,
                 'status' => Req::STATUS_PENDING,
                 'round_number' => 1,
             ]);
@@ -196,12 +202,13 @@ class PriceReductionService
             throw new ReductionException(translate('negotiation_already_processed'), 422);
         }
 
-        if ($request->cart_id) {
-            $cart = Cart::whereKey($request->cart_id)->lockForUpdate()->first();
-            if ($cart) {
-                // on AJOUTE à la remise native du produit (l'ancienne version l'écrasait)
-                $cart->discount = (float) $request->cart_base_discount + $amount;
-                $cart->save();
+        if ($request->cart_group_id) {
+            $carts = Cart::where('cart_group_id', $request->cart_group_id)->lockForUpdate()->get();
+            if ($carts->isNotEmpty()) {
+                // Divise la réduction totale acceptée proportionnellement ou sur le premier
+                $firstCart = $carts->first();
+                $firstCart->discount = (float) $firstCart->discount + $amount;
+                $firstCart->save();
             }
         } elseif ($request->order_id) {
             $order = Order::whereKey($request->order_id)->lockForUpdate()->first();

@@ -464,54 +464,13 @@ class Helpers
      */
     public static function send_push_notif_to_device($fcm_token, $data)
     {
-        $key = BusinessSetting::where(['type' => 'push_notification_key'])->first()->value;
-        $url = "https://fcm.googleapis.com/fcm/send";
-        $header = array("authorization: key=" . $key . "",
-            "content-type: application/json"
-        );
-
-        if (isset($data['order_id']) == false) {
-            $data['order_id'] = null;
-        }
-
-        $postdata = '{
-            "to" : "' . $fcm_token . '",
-            "data" : {
-                "title" :"' . $data['title'] . '",
-                "body" : "' . $data['description'] . '",
-                "image" : "' . $data['image'] . '",
-                "order_id":"' . $data['order_id'] . '",
-                "type":"' . $data['type'] . '",
-                "is_read": 0
-              },
-              "notification" : {
-                "title" :"' . $data['title'] . '",
-                "body" : "' . $data['description'] . '",
-                "image" : "' . $data['image'] . '",
-                "order_id":"' . $data['order_id'] . '",
-                "title_loc_key":"' . $data['order_id'] . '",
-                "type":"' . $data['type'] . '",
-                "is_read": 0,
-                "icon" : "new",
-                "sound" : "default"
-              }
-        }';
-
-        $ch = curl_init();
-        $timeout = 120;
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
-
-        // Get URL content
-        $result = curl_exec($ch);
-        // close handle to release resources
-        curl_close($ch);
-
-        return $result;
+        $sender = new class {
+            use \App\Traits\PushNotificationTrait;
+            public function send($fcmToken, $data) {
+                return $this->sendPushNotificationToDevice($fcmToken, $data);
+            }
+        };
+        return $sender->send($fcm_token, $data);
     }
 
 

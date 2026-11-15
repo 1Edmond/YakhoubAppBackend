@@ -1231,11 +1231,11 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['admin', '
                 ->with('success', 'Auction times updated successfully.');
         })->name('auction.time.update');
     }
-});
 
-Route::group(['prefix' => 'transfer-operators', 'middleware' => ['admin']], function () {
-    Route::get('/', [\App\Http\Controllers\Admin\TransferOperatorController::class, 'index']);
-    Route::post('/', [\App\Http\Controllers\Admin\TransferOperatorController::class, 'store']);
-    Route::post('/{operator}/fees', [\App\Http\Controllers\Admin\TransferOperatorController::class, 'addFee']);
+    Route::group(['prefix' => 'transfer-operators', 'as' => 'transfer-operators.'], function () {
+        Route::get('/', [\App\Http\Controllers\Admin\TransferOperatorController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\Admin\TransferOperatorController::class, 'store'])->name('store');
+        Route::post('/{operator}/fees', [\App\Http\Controllers\Admin\TransferOperatorController::class, 'addFee'])->name('add-fee');
+    });
 });
 
