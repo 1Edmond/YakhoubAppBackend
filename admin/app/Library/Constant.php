@@ -468,7 +468,7 @@ const TELEPHONE_CODES = [
     ["name" => 'Zimbabwe (+263)', "code" => '263'],
 ];
 
-const SOFTWARE_VERSION = '16.5';
+const SOFTWARE_VERSION = '1.0.0';
 const SOFTWARE_ID = 'multishop_tchad_core';
 
 const THEME_RATIO = [

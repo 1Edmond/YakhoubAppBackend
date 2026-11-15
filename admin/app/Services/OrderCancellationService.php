@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Events\OrderCancelledByCustomerEvent;
 use App\Exceptions\OrderCancellationException;
 use App\Models\Order;
-use App\Models\User;
+use App\User;
 use App\Utils\Convert;
 use App\Utils\CustomerManager;
 use App\Utils\OrderManager;
@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class OrderCancellationService
 {
-    public function cancel(User $customer, int $orderId): Order
+    public function cancel($customer, int $orderId): Order
     {
         $order = DB::transaction(function () use ($customer, $orderId) {
             // Propriété vérifiée DANS la requête : un autre client obtient un 404.
@@ -49,7 +49,7 @@ class OrderCancellationService
     }
 
     /** Remboursement éventuel moins les frais, ou débit des frais seuls. */
-    private function settleWallet(User $customer, Order $order, float $fee, float $paid): void
+    private function settleWallet($customer, Order $order, float $fee, float $paid): void
     {
         $net = config('multishop.refund_paid_orders_to_wallet') ? $paid - $fee : -$fee;
         if (abs($net) < 0.005) {

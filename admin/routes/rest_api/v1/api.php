@@ -116,8 +116,8 @@ Route::group(['prefix' => 'v1', 'middleware' => ['api_lang']], function () {
             Route::get('/', 'getCartList');
             Route::post('add', 'addToCart');
             Route::put('update', 'update_cart');
-            Route::delete('remove', 'remove_from_cart');
-            Route::delete('remove-all', 'remove_all_from_cart');
+            Route::match(['post', 'delete'], 'remove', 'remove_from_cart');
+            Route::match(['post', 'delete'], 'remove-all', 'remove_all_from_cart');
             Route::post('select-cart-items', 'updateCheckedCartItems');
             Route::post('product-restock-request', 'addProductRestockRequest');
             Route::post('get-referral-discount-redeem', 'getReferralDiscountRedeem');
@@ -468,6 +468,13 @@ Route::group(['prefix' => 'v1', 'middleware' => ['api_lang']], function () {
         Route::post('orders/{orderId}/request-reduction', [App\Http\Controllers\RestAPI\v1\PriceReductionController::class, 'createRequest']);
         Route::get('reduction-requests', [App\Http\Controllers\RestAPI\v1\PriceReductionController::class, 'getMyRequests']);
         Route::put('reduction-requests/{requestId}/respond', [App\Http\Controllers\RestAPI\v1\PriceReductionController::class, 'respondToCounterOffer']);
+        Route::post('cart-groups/request-reduction', [App\Http\Controllers\RestAPI\v1\PriceReductionController::class, 'createCartGroupRequest']);
+        Route::get('cart/negotiations', [App\Http\Controllers\RestAPI\v1\PriceReductionController::class, 'getCartNegotiations']);
+        Route::put('cart/negotiations/{requestId}/respond', [App\Http\Controllers\RestAPI\v1\PriceReductionController::class, 'respondToCounterOffer']);
+    });
+
+    // Also support root paths without 'customer/' prefix for mobile client
+    Route::group(['middleware' => ['auth:api']], function () {
         Route::post('cart-groups/request-reduction', [App\Http\Controllers\RestAPI\v1\PriceReductionController::class, 'createCartGroupRequest']);
         Route::get('cart/negotiations', [App\Http\Controllers\RestAPI\v1\PriceReductionController::class, 'getCartNegotiations']);
         Route::put('cart/negotiations/{requestId}/respond', [App\Http\Controllers\RestAPI\v1\PriceReductionController::class, 'respondToCounterOffer']);

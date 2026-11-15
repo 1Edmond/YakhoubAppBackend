@@ -213,18 +213,20 @@ class CartController extends Controller
         }
 
         $user = Helpers::getCustomerInformation($request);
-        $cartQuery = Cart::where([
+        $cart = Cart::where([
             'id' => $request->key,
             'customer_id' => ($user == 'offline' ? (session('guest_id') ?? $request->guest_id) : $user->id),
             'is_guest' => ($user == 'offline' ? 1 : '0'),
-        ]);
+        ])->first();
 
-        // Clean up or refuse unfulfilled negotiations tied to this cart item
-        \App\Models\PriceReductionRequest::where('cart_group_id', $cart->cart_group_id)
-            ->whereNull('order_id')
-            ->delete();
+        if ($cart) {
+            // Clean up or refuse unfulfilled negotiations tied to this cart item
+            \App\Models\PriceReductionRequest::where('cart_group_id', $cart->cart_group_id)
+                ->whereNull('order_id')
+                ->delete();
 
-        $cartQuery->delete();
+            $cart->delete();
+        }
         return response()->json(translate('successfully_removed'));
     }
 
