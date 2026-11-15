@@ -25,7 +25,7 @@ class SellerRegistrationRequest extends FormRequest
             'l_name' => 'required',
             'shop_name' => 'required',
             'phone' => 'required|unique:sellers,phone',
-            'nni' => 'required|string|max:20|unique:nni_records,nni_number',
+            'nni' => ['required', 'string', 'digits:10', new \App\Rules\NniRule(), 'unique:nni_records,nni_number'],
             'password' => 'required|min:8',
             'image' => getRulesStringForImageValidation(
                 rules: ['required'],
@@ -64,6 +64,7 @@ class SellerRegistrationRequest extends FormRequest
             'email.unique' => translate('This email is already registered.'),
             'phone.unique' => translate('This phone number is already registered.'),
             'nni.required' => translate('NNI is required.'),
+            'nni.digits' => translate('NNI must be exactly 10 digits.'),
             'nni.unique' => translate('This NNI is already registered.'),
             'password.min' => translate('Password must be at least 8 characters.'),
 

@@ -13,8 +13,8 @@ return [
     // CDC 3.4.7 : 2 allers-retours maximum
     'max_negotiation_rounds' => 2,
 
-    // Format NNI à CONFIRMER avec le format officiel tchadien
-    'nni_regex' => env('MULTISHOP_NNI_REGEX', '/^[A-Za-z0-9]{8,20}$/'),
+    // Format NNI officiel tchadien : exactement 10 chiffres
+    'nni_regex' => env('MULTISHOP_NNI_REGEX', '/^[0-9]{10}$/'),
 
     'transfer_timezone' => env('MULTISHOP_TIMEZONE', 'Africa/Ndjamena'),
 

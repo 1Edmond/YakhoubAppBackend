@@ -9,7 +9,7 @@ class NniRule implements ValidationRule
 {
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $regex = config('multishop.nni_regex');
+        $regex = config('multishop.nni_regex') ?? '/^[0-9]{10}$/';
 
         if (!is_string($value) || !preg_match($regex, trim($value))) {
             $fail(translate('invalid_nni_format'));

@@ -23,7 +23,7 @@ class RegisterController extends Controller
             'l_name'        => 'required',
             'shop_name'     => 'required',
             'phone'         => 'required',
-            'nni'           => 'required|string|max:20|unique:nni_records,nni_number',
+            'nni'           => ['required', 'string', 'digits:10', new \App\Rules\NniRule(), 'unique:nni_records,nni_number'],
             'password'      => 'required|min:8',
             'image'         => 'required|mimes: jpg,jpeg,png,,gif',
             'logo'          => 'required|mimes: jpg,jpeg,png,,gif',
@@ -46,10 +46,14 @@ class RegisterController extends Controller
             $seller->status =  $request->status == 'approved'?'approved': "pending";
             $seller->save();
 
-            \App\Models\NniRecord::create([
-                'user_id' => $seller->id,
-                'nni_number' => $request->nni,
-            ]);
+            if (!empty($request->nni)) {
+                \App\Models\NniRecord::create([
+                    'seller_id' => $seller->id,
+                    'nni_number' => $request->nni,
+                    'document_type' => 'nni',
+                    'is_verified' => false,
+                ]);
+            }
 
             $shop = new Shop();
             $shop->seller_id = $seller->id;
